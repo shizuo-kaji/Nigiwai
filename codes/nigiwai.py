@@ -30,15 +30,17 @@ parser.add_argument('--start_frame', '-sf', default=0, type=int, help='start fra
 parser.add_argument('--end_frame', '-ef', default=-1, type=int, help='end frame')
 parser.add_argument('--frame_skip', '-fs', default=1.0, type=float, help='sampling interval (unit time)')
 parser.add_argument('--alpha', '-a', default=0.8, type=float, help='weight for moving average')
-parser.add_argument('--signed_velocity', '-sv', action='store_true', help='')
-parser.add_argument('--lambda_W', '-lW', default=0.1, type=float, help='weight')
-parser.add_argument('--lambda_C', '-lC', default=3.0, type=float, help='weight')
+parser.add_argument('--lambda_W', '-lW', default=1.0, type=float, help='weight')
+parser.add_argument('--lambda_C', '-lC', default=2.0, type=float, help='weight')
 parser.add_argument('--scale', '-sc', default=10.0, type=float, help='spatial scaling')
-parser.add_argument('--amplitude', '-amp', default=5000.0, type=float, help='multiplier for Nigiwai score')
+parser.add_argument('--amplitude', '-amp', default=10000.0, type=float, help='multiplier for Nigiwai score')
 
 args = parser.parse_args()
 
-args.output = os.path.join(args.outdir,os.path.splitext(args.input)[0])
+args.output = os.path.join(args.outdir,os.path.splitext(os.path.basename(args.input))[0])
+print("Find outputs in {}".format(args.outdir))
+os.makedirs(args.outdir, exist_ok=True)
+
 if not args.bg_img:
     args.bg_img = os.path.splitext(args.input)[0]+".png"
     
@@ -46,19 +48,19 @@ if not args.bg_img:
 df = pd.read_csv(args.input,header=0,delim_whitespace=True,dtype='f8')
 n = int(df['pedestrianId'].max())
 df['pedestrianId'] -= 1 # PID start with 0
-print("Number of pedestrians:", n)
 
 if args.end_frame<0:
-    args.end_frame = int(df['endTime-PID1'].max()/args.frame_skip)+1
-else:
-    args.end_frame += 1
+    args.end_frame = int(df['endTime-PID1'].max()/args.frame_skip)
 
-X = np.full((n,args.end_frame),-1.0)  # (pid,frame)
-Y = np.full((n,args.end_frame),-1.0)  # (pid,frame)
+X = np.full((n,args.end_frame+1),-1.0)  # (pid,frame)
+Y = np.full((n,args.end_frame+1),-1.0)  # (pid,frame)
 
 # %%  interpolate trajectory
+roi_ids = []
 for index, row in df.iterrows():
     pid = int(row['pedestrianId'])
+    if row['targetId-PID2'] < 0:  # this is considered to be ROI and it does not affect Nigiwai score
+        roi_ids.append(pid)
     start_fr = max(int(row['simTime']/args.frame_skip),args.start_frame)
     end_fr = min(int(row['endTime-PID1']/args.frame_skip)+1,args.end_frame)
     n_fr = end_fr-start_fr
@@ -66,6 +68,7 @@ for index, row in df.iterrows():
         X[pid,start_fr+fr] = args.scale*(fr*row['endX-PID1'] + (n_fr-fr)*row['startX-PID1'])/n_fr
         Y[pid,start_fr+fr] = args.scale*(fr*row['endY-PID1'] + (n_fr-fr)*row['startY-PID1'])/n_fr
 
+print("Number of pedestrians: {}, Number of ROIs: {}".format(n-len(roi_ids),len(roi_ids)))
 
 # %% compute Nigiwai score for each frame
 D = np.full((n,n),np.inf)  # (pid,pid)
@@ -73,15 +76,14 @@ nigiwai = []
 total_nigiwai = []
 bg_img = ImageOps.flip(Image.open(args.bg_img))  # image upside down
 for fr in range(args.start_frame,args.end_frame):
-    print("Computing frame: ",fr)
+#    print("Computing frame: ",fr)
     # draw image
     img = bg_img.copy()
     draw = ImageDraw.Draw(img)
     nD = dist(X[:,fr],Y[:,fr],D,args.alpha)
-    V=np.where(np.logical_and(nD != np.inf,D != np.inf), nD-D, 0)
-#    np.nan_to_num(V, nan=0, copy=False)
-    if args.signed_velocity:
-        V = np.abs(V)
+    nD[:,roi_ids]=np.inf  # ROI IDs does not contribute to Nigiwai
+    V=np.abs(np.where(np.logical_and(nD != np.inf, D != np.inf), nD-D, 0))
+    np.nan_to_num(V, nan=0, copy=False)
     D = nD
     nigiwai_fr = np.zeros(n)
     for i in range(n):
