@@ -60,8 +60,8 @@ for index, row in df.iterrows():
     pid = int(row['pedestrianId'])
     if row['targetId-PID2'] < 0:  # this is considered to be ROI and it does not affect Nigiwai score
         roi_ids.append(pid)
-    start_fr = max(int(row['simTime']/args.frame_skip),args.start_frame)
-    end_fr = min(int(row['endTime-PID1']/args.frame_skip)+1,args.end_frame)
+    start_fr = max(round(row['simTime']/args.frame_skip),args.start_frame)
+    end_fr = min(round(row['endTime-PID1']/args.frame_skip)+1,args.end_frame)
     n_fr = end_fr-start_fr
     for fr in range(n_fr):
         X[pid,start_fr+fr] = args.scale*(fr*row['endX-PID1'] + (n_fr-fr)*row['startX-PID1'])/n_fr
