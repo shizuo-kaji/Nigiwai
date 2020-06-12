@@ -14,9 +14,8 @@ import matplotlib.pyplot as plt
  
 
 def dist(x,y,D,alpha):
-    n=len(x)
     d = np.sqrt((x[:,np.newaxis]-x[np.newaxis,:])**2 + (y[:,np.newaxis]-y[np.newaxis,:])**2)
-    d = np.where(np.logical_or(x[:,np.newaxis]==-1,x[np.newaxis,:]==-1), np.inf, d)
+    d = np.where(np.logical_or(x[:,np.newaxis]==-1,x[np.newaxis,:]==-1), np.inf, d)   # x == -1 means the person is not in the field
     np.fill_diagonal(d,np.inf)
     nD = np.where(D != np.inf, (1-alpha)*D+alpha*d, d)
     return(nD)
@@ -52,7 +51,7 @@ df['pedestrianId'] -= 1 # PID start with 0
 if args.end_frame<0:
     args.end_frame = int(df['endTime-PID1'].max()/args.frame_skip)
 
-X = np.full((n,args.end_frame+1),-1.0)  # (pid,frame)
+X = np.full((n,args.end_frame+1),-1.0)  # (pid,frame),  x == -1 means the person is not in the field
 Y = np.full((n,args.end_frame+1),-1.0)  # (pid,frame)
 
 # %%  interpolate trajectory
