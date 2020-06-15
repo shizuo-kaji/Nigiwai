@@ -1,6 +1,8 @@
 # Nigiwai score from trajectory
 Written by Shizuo KAJI
+```
 Minors modificaios are added by Mohamed 
+```
 ## Licence
 MIT Licence
 
@@ -22,9 +24,11 @@ python nigiwai.py -i twoShops_btw.txt --start_frame 100 --end_frame 150 --frame_
 python nigiwai.py -h
 ```
 - To set ROI:
+```
 * Add ROI data lines on the top of the file "twoShops_btw.txt", each line represents data for a stationary pedestrian.
 * Put (-1) under the field of 'pedestrianId', 'endTime-PID1' and 'targetId-PID2'. 
 * The (-1) will be adjusted by the code to the appropriate value.
+```
 
 - To conver images to a video
 ```
