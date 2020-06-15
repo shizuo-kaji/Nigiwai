@@ -24,11 +24,11 @@ parser.add_argument('--bg_img', '-bg', default='', type=str, help='background im
 parser.add_argument('--start_frame', '-sf', default=0, type=int, help='start frame')
 parser.add_argument('--end_frame', '-ef', default=-1, type=int, help='end frame')
 parser.add_argument('--frame_skip', '-fs', default=1.0, type=float, help='sampling interval (unit time)')
-parser.add_argument('--alpha', '-a', default=0.8, type=float, help='weight for moving average')
-parser.add_argument('--lambda_W', '-lW', default=1.0, type=float, help='weight')
-parser.add_argument('--lambda_C', '-lC', default=10.0, type=float, help='weight')
+parser.add_argument('--alpha', '-a', default=0.9, type=float, help='weight for moving average')
+parser.add_argument('--lambda_W', '-lW', default=5.0, type=float, help='weight')
+parser.add_argument('--lambda_C', '-lC', default=8.0, type=float, help='weight')
 parser.add_argument('--scale', '-sc', default=10.0, type=float, help='spatial scaling')
-parser.add_argument('--amplitude', '-amp', default=100000.0, type=float, help='multiplier for Nigiwai score')
+parser.add_argument('--amplitude', '-amp', default=70000.0, type=float, help='multiplier for Nigiwai score')
 
 args = parser.parse_args()
 
@@ -41,9 +41,9 @@ if not args.bg_img:
     
 # %%
 df = pd.read_csv(args.input,header=0,delim_whitespace=True,dtype='f8')
-df['pedestrianId'] -= 1 # PID start with 0
-
 nPed = int(df['pedestrianId'].max())
+
+df['pedestrianId'] -= 1 # PID start with 0
 nROI=(df['pedestrianId'][df['pedestrianId']<0]).size  # number of ROI pedestrians
 df['endTime-PID1'][df['pedestrianId']<0]=df['endTime-PID1'].max()   # adjust end time for ROI to max
 df['pedestrianId'][df['pedestrianId']<0]=nPed+np.arange(nROI)  # change ID for ROI from -1 to next ID of max(ID)
