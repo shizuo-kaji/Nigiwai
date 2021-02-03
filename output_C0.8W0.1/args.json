@@ -1,0 +1,27 @@
+{
+    "video": "data/MOT16-04.mp4",
+    "outdir": "output_C0.8W0.1",
+    "input": "data/MOT16-04.csv",
+    "start_frame": 0,
+    "end_frame": -1,
+    "frame_skip": 4,
+    "frame_per_sec": 24,
+    "alpha": 0.9,
+    "beta": 0.1,
+    "gamma": 0.9,
+    "lambda_V": 0.1,
+    "lambda_D": 0.8,
+    "min_V": 0.5,
+    "min_D": 1.0,
+    "scale": 0.0125,
+    "amplitude": 5000,
+    "min_length": 20,
+    "write_image_every": 4,
+    "online": false,
+    "monitor": [
+        30,
+        13,
+        46
+    ],
+    "output": "output_C0.8W0.1/MOT16-04"
+}
